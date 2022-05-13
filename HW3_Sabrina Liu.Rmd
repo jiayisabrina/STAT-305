@@ -1,0 +1,267 @@
+---
+title: "HW3"
+author: "Sabrina Liu"
+date: "2022/5/3"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Name: Sabrina Liu
+## Email: jliu845@wisc.edu
+
+
+```{r}
+#load necessary packages
+if (!require("png")) {
+  install.packages("png")
+  stopifnot(require("png"))
+}
+
+if (!require("XML")) {
+  install.packages("XML")
+  stopifnot(require("XML"))
+}
+
+if (!require("curl")) {
+  install.packages("curl") # do this once per lifetime
+  stopifnot(require("curl")) # do this once per session
+}
+
+if (!require("parallel")) { # for multicore computing functions
+  install.packages("parallel")
+  stopifnot(require("parallel"))
+}
+```
+
+```{r}
+str(vg <- readPNG("Van_Gogh.png"))
+dim(vg)
+```
+
+![alt image](Van_Gogh.png)
+
+```{r}
+red.vg <- vg[,,1]
+green.vg <- vg[,,2]
+blue.vg <- vg[,,3]
+str(blue.vg)
+```
+
+```{r}
+vg.list = c()
+vg.list[[1]] = red.vg
+vg.list[[2]] = green.vg
+vg.list[[3]] = blue.vg
+```
+
+
+```{r}
+layout(matrix(1:3, ncol=3))
+image(t(red.vg[nrow(red.vg):1,]), col = gray((1:12)/13), main="Red channel")
+image(t(green.vg[nrow(green.vg):1,]), col = gray((1:12)/13), main="Green channel")
+image(t(blue.vg[nrow(blue.vg):1,]), col = gray((1:12)/13), main="Blue channel")
+```
+
+```{r}
+Fun_imp <- function(X, k){
+  d <- dim(X)
+  n <- d[1]
+  m <- d[2]
+  pad.X <- matrix(0, n+2*k, m+2*k)
+  pad.X[(k+1):(n+k), (k+1):(m+k)] <- X
+  pad.X
+  mean.X <- matrix(0, n+2*k, m+2*k)
+  for (i in 1:n) {
+    for (j in 1:m) {
+      mean.X[i+k, j+k] <- mean(pad.X[i:(i+2*k), j:(j+2*k)])
+    }
+  }
+  new.X <- mean.X[(k+1):(n+k), (k+1):(m+k)]
+  return(new.X)
+}
+```
+
+```{r}
+k=1
+
+n.cores = detectCores()
+if (.Platform$OS.type == "unix") { 
+  cluster = makePSOCKcluster(names = 3)
+  clusterEvalQ(cl = cluster, expr = {require("XML"); require("curl")}) 
+  res <- clusterMap(cl = cluster, fun = Fun_imp, vg.list, k)
+  stopCluster(cl = cluster)
+} else {res <- mcmapply(FUN = Fun_imp, vg.list, k, mc.cores = 3)
+}
+
+red.vg.mean <- res[[1]]
+green.vg.mean <- res[[2]]
+blue.vg.mean <- res[[3]]
+
+a <- array(c(red.vg.mean, green.vg.mean, blue.vg.mean), dim = c(dim(red.vg.mean), 3))
+
+layout(matrix(1:3, ncol=3))
+image(t(red.vg.mean), col = gray((1:12)/13), main="Red channel")
+image(t(green.vg.mean), col = gray((1:12)/13), main="Green channel")
+image(t(blue.vg.mean), col = gray((1:12)/13), main="Blue channel")
+
+tp_1 <- array(c(red.vg.mean, green.vg.mean, blue.vg.mean), dim = c(374, 800, 3))
+writePNG(tp_1, target = "USERNAME_1.png")
+```
+
+![alt image](USERNAME_1.png)
+
+```{r}
+k=3
+
+n.cores = detectCores()
+if (.Platform$OS.type == "unix") { 
+  cluster = makePSOCKcluster(names = 3)
+  clusterEvalQ(cl = cluster, expr = {require("XML"); require("curl")}) 
+  res <- clusterMap(cl = cluster, fun = Fun_imp, vg.list, k)
+  stopCluster(cl = cluster)
+} else {res <- mcmapply(FUN = Fun_imp, vg.list, k, mc.cores = 3)
+}
+
+red.vg.mean <- res[[1]]
+green.vg.mean <- res[[2]]
+blue.vg.mean <- res[[3]]
+
+b <- array(c(red.vg.mean, green.vg.mean, blue.vg.mean), dim = c(dim(red.vg.mean), 3))
+
+layout(matrix(1:3, ncol=3))
+image(t(red.vg.mean[nrow(red.vg.mean):1,]), col = gray((1:12)/13), main="Red channel")
+image(t(green.vg.mean[nrow(green.vg.mean):1,]), col = gray((1:12)/13), main="Green channel")
+image(t(blue.vg.mean[nrow(blue.vg.mean):1,]), col = gray((1:12)/13), main="Blue channel")
+
+tp_3 <- array(c(red.vg.mean, green.vg.mean, blue.vg.mean), dim = c(374, 800, 3))
+writePNG(tp_3, target = "USERNAME_3.png")
+```
+
+![alt image](USERNAME_3.png)
+
+```{r}
+k=5
+
+n.cores = detectCores()
+if (.Platform$OS.type == "unix") { 
+  cluster = makePSOCKcluster(names = 3)
+  clusterEvalQ(cl = cluster, expr = {require("XML"); require("curl")}) 
+  res <- clusterMap(cl = cluster, fun = Fun_imp, vg.list, k)
+  stopCluster(cl = cluster)
+} else {res <- mcmapply(FUN = Fun_imp, vg.list, k, mc.cores = 3)
+}
+
+red.vg.mean <- res[[1]]
+green.vg.mean <- res[[2]]
+blue.vg.mean <- res[[3]]
+
+c <- array(c(red.vg.mean, green.vg.mean, blue.vg.mean), dim = c(dim(red.vg.mean), 3))
+
+layout(matrix(1:3, ncol=3))
+image(t(red.vg.mean[nrow(red.vg.mean):1,]), col = gray((1:12)/13), main="Red channel")
+image(t(green.vg.mean[nrow(green.vg.mean):1,]), col = gray((1:12)/13), main="Green channel")
+image(t(blue.vg.mean[nrow(blue.vg.mean):1,]), col = gray((1:12)/13), main="Blue channel")
+
+tp_5 <- array(c(red.vg.mean, green.vg.mean, blue.vg.mean), dim = c(374, 800, 3))
+writePNG(tp_5, target = "USERNAME_5.png")
+```
+
+![alt image](USERNAME_5.png)
+
+```{r}
+FUN_det <- function(X, k){
+  d <- dim(X)
+  n <- d[1]
+  m <- d[2]
+  pad.X <- matrix(0, n+2*k, m+2*k)
+  pad.X[(k+1):(n+k), (k+1):(m+k)] <- X
+  pad.X
+  sd.X <- matrix(0, n+2*k, m+2*k)
+  for (i in 1:n) {
+    for (j in 1:m) {
+      sd.X[i+k, j+k] <- sd(pad.X[i:(i+2*k), j:(j+2*k)])
+    }
+  }
+  new.sd.X <- sd.X[(k+1):(n+k), (k+1):(m+k)]
+  st <- quantile(as.vector(new.sd.X), 0.95)
+  X[which(new.sd.X > st)] = 1
+  return(X)
+}
+```
+
+```{r}
+k = 1
+vg <- readPNG("Van_Gogh.png")
+
+red.vg <- vg[,,1]
+green.vg <- vg[,,2]
+blue.vg <- vg[,,3]
+
+vg.list = c()
+vg.list[[1]] = red.vg
+vg.list[[2]] = green.vg
+vg.list[[3]] = blue.vg
+
+n.cores = detectCores()
+if (.Platform$OS.type == "unix") { 
+  cluster = makePSOCKcluster(names = 3)
+  clusterEvalQ(cl = cluster, expr = {require("XML"); require("curl")}) 
+  res <- clusterMap(cl = cluster, fun = FUN_det, vg.list, k)
+  stopCluster(cl = cluster)
+} else {res <- mcmapply(FUN = FUN_det, vg.list, k, mc.cores = 3)
+}
+
+red.vg.sd <- res[[1]]
+green.vg.sd <- res[[2]]
+blue.vg.sd <- res[[3]]
+
+layout(matrix(1:3, ncol=3))
+image(t(red.vg.sd[nrow(red.vg.sd):1,]), col = gray((1:12)/13), main="Red channel")
+image(t(green.vg.sd[nrow(green.vg.sd):1,]), col = gray((1:12)/13), main="Green channel")
+image(t(blue.vg.sd[nrow(blue.vg.sd):1,]), col = gray((1:12)/13), main="Blue channel")
+
+vg.new <- array(c(red.vg.sd, green.vg.sd, blue.vg.sd), dim = dim(vg))
+writePNG(vg.new, target = "vg.new.png")
+```
+
+![alt image](vg.new.png)
+
+```{r}
+k = 1
+mds <- readPNG("Madison.png")
+
+red.mds <- mds[,,1]
+green.mds <- mds[,,2]
+blue.mds <- mds[,,3]
+
+mds.list = c()
+mds.list[[1]] = red.mds
+mds.list[[2]] = green.mds
+mds.list[[3]] = blue.mds
+
+n.cores = detectCores()
+if (.Platform$OS.type == "unix") { 
+  cluster = makePSOCKcluster(names = 3)
+  clusterEvalQ(cl = cluster, expr = {require("XML"); require("curl")}) 
+  res <- clusterMap(cl = cluster, fun = FUN_det, mds.list, k)
+  stopCluster(cl = cluster)
+} else {res <- mcmapply(FUN = FUN_det, mds.list, k, mc.cores = 3)
+}
+
+red.mds.sd <- res[[1]]
+green.mds.sd <- res[[2]]
+blue.mds.sd <- res[[3]]
+
+layout(matrix(1:3, ncol=3))
+image(t(red.mds.sd[nrow(red.mds.sd):1,]), col = gray((1:12)/13), main="Red channel")
+image(t(green.mds.sd[nrow(green.mds.sd):1,]), col = gray((1:12)/13), main="Green channel")
+image(t(blue.mds.sd[nrow(blue.mds.sd):1,]), col = gray((1:12)/13), main="Blue channel")
+
+mds.new <- array(c(red.mds.sd, green.mds.sd, blue.mds.sd), dim = dim(mds))
+writePNG(mds.new, target = "mds.new.png")
+```
+
+![alt image](mds.new.png)
